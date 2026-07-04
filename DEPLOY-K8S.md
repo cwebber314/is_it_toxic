@@ -151,3 +151,10 @@ kubectl rollout status deployment/is-it-toxic
 - **Cleanup:** `doctl kubernetes cluster delete is-it-toxic` also removes the
   managed Load Balancer it created. (Deleting only the Service also releases the
   LB.)
+
+## k8s debug
+
+If you tweak the yaml and want to try it out:
+```sh
+kubectl apply -f k8s/deployment.yaml
+```

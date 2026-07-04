@@ -17,8 +17,10 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-import joblib
-from sentence_transformers import SentenceTransformer
+# NOTE: the heavy dependencies (joblib, and sentence_transformers -> torch) are
+# imported lazily inside the loaders below. That keeps importing this module
+# cheap and dependency-free, so e.g. the API smoke tests can import serve.py
+# without installing torch or loading any model.
 
 ROOT = Path(__file__).resolve().parent
 BGE_MODEL_PATH = ROOT / "models" / "bge-small-en-v1.5"
@@ -40,6 +42,9 @@ class Prediction:
 @lru_cache(maxsize=1)
 def _load_bge():
     """BGE pipeline: the sentence-transformer embedder + Logistic Regression head."""
+    import joblib
+    from sentence_transformers import SentenceTransformer
+
     embedder = SentenceTransformer(str(BGE_MODEL_PATH))
     logreg = joblib.load(LOGREG_PATH)
     return embedder, logreg
@@ -48,6 +53,8 @@ def _load_bge():
 @lru_cache(maxsize=1)
 def _load_tfidf():
     """TF-IDF pipeline: the fitted vectorizer + the LightGBM classifier."""
+    import joblib
+
     vectorizer = joblib.load(VECTORIZER_PATH)
     lightgbm = joblib.load(LIGHTGBM_PATH)
     return vectorizer, lightgbm

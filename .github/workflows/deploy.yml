@@ -21,7 +21,23 @@ env:
   IMAGE: ghcr.io/${{ github.repository_owner }}/is-it-toxic
 
 jobs:
+  # Fast API smoke tests (ML layer mocked -- no model/torch needed). Gates the
+  # rest of the pipeline: a failure here stops the build and deploy.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install test dependencies
+        run: pip install fastapi httpx pytest
+      - name: Run tests
+        run: pytest -q
+
   build-and-push:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

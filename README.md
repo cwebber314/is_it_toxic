@@ -69,6 +69,7 @@ API also runs Pipeline 2 for side-by-side comparison.
 | `classify_lightgbm.py` | Pipeline 2 classifier — LightGBM |
 | `predict.py` | Loads trained models, shared `predict_bge` / `predict_tfidf` |
 | `serve.py` | FastAPI app exposing `/is-it-toxic` |
+| `test_serve.py` | Fast pytest smoke tests for the API (ML layer mocked) |
 | `explore.ipynb` | Visualize/compare pipelines, plot the classification space |
 | `experiment.ipynb` | Self-contained harness to tune models with cross-validation |
 | `Dockerfile`, `docker-compose.yml`, `DEPLOY.md` | Serving image + droplet deploy |
@@ -244,6 +245,21 @@ It covers:
 
 Add a new experiment by writing one `score("name", estimator, X, y)` line — it
 lands in the leaderboard automatically.
+
+## Tests
+
+`test_serve.py` holds fast smoke tests for the FastAPI app. The ML layer is
+mocked, so they run in a fraction of a second and need **no model, torch, or
+trained artifacts** — they check the API wiring (routes, response shape,
+validation), not classifier accuracy.
+
+```bash
+pip install pytest httpx     # or: pip install -r requirements.txt
+pytest                       # runs test_serve.py
+```
+
+These also run in CI as the first job in `.github/workflows/deploy.yml`; if they
+fail, the build and deploy are skipped.
 
 ## FastAPI Interface
 
