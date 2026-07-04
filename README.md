@@ -282,5 +282,25 @@ docker compose up --build
 # -> http://localhost/docs
 ```
 
-See **[DEPLOY.md](DEPLOY.md)** for step-by-step DigitalOcean droplet instructions
-(including how to get the gitignored model + artifact onto the droplet).
+Two deployment paths to DigitalOcean:
+- **[DEPLOY.md](DEPLOY.md)** — single **droplet** via Docker Compose (simplest).
+- **[DEPLOY-K8S.md](DEPLOY-K8S.md)** — **Kubernetes (DOKS)** using the manifests in
+  [`k8s/`](k8s/): Deployment + LoadBalancer Service, with optional autoscaling and
+  Ingress/TLS.
+
+### Continuous deployment (GitHub Actions)
+
+`.github/workflows/deploy.yml` builds the image and pushes it to the DO Container
+Registry on every commit to `main` (tagged `:latest` and `:<git-sha>`). It does
+**not** retrain — it downloads the BGE model and bakes in the committed
+`models_out/logreg.joblib`. So to ship a new model: retrain locally
+(`python classify_logreg.py`), commit the updated `models_out/logreg.joblib`, and
+push.
+
+One-time setup:
+- Add a repo secret **`DIGITALOCEAN_ACCESS_TOKEN`** (a DO API token with registry
+  read/write) under *Settings → Secrets and variables → Actions*.
+- Adjust the `IMAGE` env in the workflow if your registry/repo name differs.
+
+The workflow pushes to the registry only. To also roll it out to the DOKS cluster
+automatically, add a step running `kubectl set image` — see DEPLOY-K8S.md.

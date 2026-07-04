@@ -1,0 +1,58 @@
+name: Build and push image
+
+# Build the serving image and push it to the DigitalOcean Container Registry
+# on every commit to main.
+on:
+  push:
+    branches: [main]
+
+# If several commits land quickly, only build the latest.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: registry.digitalocean.com/teaclipper/is-it-toxic
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Bring the BGE model onto the runner (it's too large to commit, and the
+      # Dockerfile COPYs it). The trained logreg.joblib is committed, so it's
+      # already present from the checkout.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Download BGE model
+        run: |
+          pip install "huggingface_hub>=0.23"
+          python scripts/download_model.py
+
+      # Authenticate Docker to the DO Container Registry. A DO API token works as
+      # both the username and password for registry.digitalocean.com.
+      - name: Log in to DigitalOcean Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: registry.digitalocean.com
+          username: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          password: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+          # Cache layers between runs so the slow PyTorch install is reused.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -64,5 +64,8 @@ chroma_db/
 # TF-IDF fitted vectorizer + feature matrices
 tfidf_artifacts/
 
-# Trained classifier models
-models_out/
+# Trained classifier models. Ignore everything except the small LogReg model,
+# which is committed so CI can bake it into the deployment image without training.
+models_out/*
+!models_out/logreg.joblib
+_notes.md

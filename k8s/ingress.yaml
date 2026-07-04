@@ -1,0 +1,31 @@
+# Optional: use an Ingress instead of a raw LoadBalancer Service if you want a
+# hostname + TLS. Requires an ingress controller (e.g. ingress-nginx) and, for
+# HTTPS, cert-manager. If you use this, change the Service in service.yaml from
+# type: LoadBalancer to type: ClusterIP (the controller's LB fronts it instead).
+#
+# Prereqs (one-time):
+#   helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --create-namespace
+#   # cert-manager + a ClusterIssuer named "letsencrypt-prod" for TLS
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: is-it-toxic
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - toxic.example.com          # <-- your domain
+      secretName: is-it-toxic-tls
+  rules:
+    - host: toxic.example.com        # <-- your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: is-it-toxic
+                port:
+                  number: 80

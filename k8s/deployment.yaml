@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: is-it-toxic
+  labels:
+    app: is-it-toxic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: is-it-toxic
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0        # keep old pods until new ones are Ready
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: is-it-toxic
+    spec:
+      containers:
+        - name: api
+          image: registry.digitalocean.com/teaclipper/is-it-toxic:latest
+          imagePullPolicy: Always   # re-pull the :latest tag on each rollout
+          ports:
+            - name: http
+              containerPort: 8000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "600Mi"
+            limits:
+              memory: "1500Mi"
+          # The model loads once at startup, so give it time before we start
+          # health-checking. startupProbe gates the other two probes.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30    # up to ~150s to become ready
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 20
