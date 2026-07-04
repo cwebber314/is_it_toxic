@@ -66,16 +66,17 @@ Good if you don't want build tooling (or the model files) living on the droplet.
 
 1. Build locally (where the model + artifact already exist):
    ```bash
-   docker build -t registry.digitalocean.com/YOUR_REGISTRY/is-it-toxic:latest .
+   docker build -t ghcr.io/cwebber314/is-it-toxic:latest .
    ```
-2. Push (after `doctl registry login`):
+2. Push (after `docker login ghcr.io -u cwebber314`, using a PAT with `write:packages`):
    ```bash
-   docker push registry.digitalocean.com/YOUR_REGISTRY/is-it-toxic:latest
+   docker push ghcr.io/cwebber314/is-it-toxic:latest
    ```
-3. On the droplet, pull and run:
+3. On the droplet, pull and run (public image needs no login; a private one
+   needs `docker login ghcr.io` first):
    ```bash
    docker run -d --restart unless-stopped -p 80:8000 \
-       registry.digitalocean.com/YOUR_REGISTRY/is-it-toxic:latest
+       ghcr.io/cwebber314/is-it-toxic:latest
    ```
 
 ## Operating it

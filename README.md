@@ -290,17 +290,21 @@ Two deployment paths to DigitalOcean:
 
 ### Continuous deployment (GitHub Actions)
 
-`.github/workflows/deploy.yml` builds the image and pushes it to the DO Container
-Registry on every commit to `main` (tagged `:latest` and `:<git-sha>`). It does
-**not** retrain — it downloads the BGE model and bakes in the committed
-`models_out/logreg.joblib`. So to ship a new model: retrain locally
-(`python classify_logreg.py`), commit the updated `models_out/logreg.joblib`, and
-push.
+`.github/workflows/deploy.yml` builds the image and pushes it to the **GitHub
+Container Registry (GHCR)** — `ghcr.io/<owner>/is-it-toxic` — on every commit to
+`main` (tagged `:latest` and `:<git-sha>`). It does **not** retrain — it downloads
+the BGE model and bakes in the committed `models_out/logreg.joblib`. So to ship a
+new model: retrain locally (`python classify_logreg.py`), commit the updated
+`models_out/logreg.joblib`, and push.
 
-One-time setup:
-- Add a repo secret **`DIGITALOCEAN_ACCESS_TOKEN`** (a DO API token with registry
-  read/write) under *Settings → Secrets and variables → Actions*.
-- Adjust the `IMAGE` env in the workflow if your registry/repo name differs.
+Setup is minimal because GHCR uses the built-in `GITHUB_TOKEN` — **no registry
+secret to create**. Just:
+- Make sure the workflow has `permissions: packages: write` (it does).
+- **After the first successful push**, make the package **public** so your DOKS
+  cluster (and anyone) can pull it without credentials: your GitHub profile →
+  **Packages** → `is-it-toxic` → *Package settings* → *Change visibility* →
+  *Public*. (Leave it private only if you're prepared to wire up an
+  `imagePullSecret` — see DEPLOY-K8S.md.)
 
 The workflow pushes to the registry only. To also roll it out to the DOKS cluster
 automatically, add a step running `kubectl set image` — see DEPLOY-K8S.md.

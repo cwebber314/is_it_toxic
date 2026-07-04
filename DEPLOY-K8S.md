@@ -14,13 +14,16 @@ cluster. The manifests live in [`k8s/`](k8s/):
 
 - [`doctl`](https://docs.digitalocean.com/reference/doctl/how-to/install/) and
   `kubectl` installed, and `doctl auth init` done.
-- The image **built and pushed** to your DO Container Registry (see
-  [DEPLOY.md](DEPLOY.md) for the build, remembering the trailing `.`):
+- The image **built and pushed** to the GitHub Container Registry. Easiest is to
+  let the CI workflow do it (push to `main`), or build/push locally:
   ```bash
-  doctl registry login
-  docker build -t registry.digitalocean.com/teaclipper/is-it-toxic:latest .
-  docker push  registry.digitalocean.com/teaclipper/is-it-toxic:latest
+  echo $GITHUB_PAT | docker login ghcr.io -u cwebber314 --password-stdin
+  docker build -t ghcr.io/cwebber314/is-it-toxic:latest .
+  docker push  ghcr.io/cwebber314/is-it-toxic:latest
   ```
+- **Make the GHCR package public** (profile → Packages → `is-it-toxic` → Package
+  settings → Change visibility → Public). Public images need no pull secret, so
+  the cluster can pull them with no extra setup.
 
 ## 1. Create the cluster
 
@@ -35,14 +38,26 @@ doctl kubernetes cluster create is-it-toxic \
 This also merges the cluster into your kubeconfig and sets it as current. (To do
 that manually later: `doctl kubernetes cluster kubeconfig save is-it-toxic`.)
 
-## 2. Let the cluster pull from your registry
+## 2. Registry access
 
-Without this, pods fail with `ImagePullBackOff`. This wires your DO Container
-Registry credentials into the cluster (adds a pull secret and attaches it to the
-`default` ServiceAccount, so no `imagePullSecrets` are needed in the manifests):
+If the GHCR package is **public** (recommended, see Prerequisites), there's
+nothing to do — the cluster pulls it without credentials.
+
+If you keep the package **private**, create a pull secret from a GitHub Personal
+Access Token (classic, with the `read:packages` scope) and reference it in the
+Deployment:
 
 ```bash
-doctl kubernetes cluster registry add is-it-toxic
+kubectl create secret docker-registry ghcr \
+  --docker-server=ghcr.io \
+  --docker-username=cwebber314 \
+  --docker-password=$GITHUB_PAT
+```
+
+```yaml
+# add under spec.template.spec in k8s/deployment.yaml
+      imagePullSecrets:
+        - name: ghcr
 ```
 
 ## 3. Setup k8s context
@@ -114,7 +129,7 @@ kubectl scale deployment/is-it-toxic --replicas=3
 `imagePullPolicy: Always`, push a new image then force a rolling restart:
 
 ```bash
-docker push registry.digitalocean.com/teaclipper/is-it-toxic:latest
+docker push ghcr.io/cwebber314/is-it-toxic:latest   # or just push to main and let CI build it
 kubectl rollout restart deployment/is-it-toxic
 kubectl rollout status deployment/is-it-toxic
 ```

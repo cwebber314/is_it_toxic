@@ -21,7 +21,8 @@ spec:
     spec:
       containers:
         - name: api
-          image: registry.digitalocean.com/teaclipper/is-it-toxic:latest
+          # Pushed by the CI workflow (ghcr.io/<owner>/is-it-toxic).
+          image: ghcr.io/cwebber314/is-it-toxic:latest
           imagePullPolicy: Always   # re-pull the :latest tag on each rollout
           ports:
             - name: http
