@@ -15,6 +15,7 @@ Then try it:
 Or open the interactive docs at http://127.0.0.1:8000/docs
 """
 
+import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -22,6 +23,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from predict import predict_bge, predict_tfidf, warmup_bge
+
+# The git commit this image was built from. CI bakes it in as a build arg ->
+# env var (see Dockerfile); falls back to "unknown" for local runs.
+GIT_SHA = os.getenv("GIT_SHA", "unknown")
 
 
 @asynccontextmanager
@@ -54,6 +59,12 @@ class ToxicResponse(BaseModel):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/version")
+def version():
+    """Report the exact git commit this image was built from."""
+    return {"git_sha": GIT_SHA}
 
 
 @app.post("/is-it-toxic", response_model=ToxicResponse)

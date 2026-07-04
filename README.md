@@ -284,6 +284,19 @@ startup, so the first request after boot is fast. Locally the response includes
 **both** pipelines for comparison; the deployed container ships BGE + LogReg
 only, so there `tfidf_lightgbm` is `null`.
 
+### Confirming which build is running
+
+- `GET /health` → `{"status": "ok"}` (liveness).
+- `GET /version` → `{"git_sha": "<commit>"}` — the exact git commit the image was
+  built from. CI bakes the SHA in as a build arg (`Dockerfile`'s `GIT_SHA` →
+  env var); locally (no env var) it reports `"unknown"`.
+
+So to smoke-test a deploy and be sure the right code is live:
+
+```bash
+curl http://<host>/version     # compare git_sha to the commit you expect
+```
+
 ## Deployment (Docker / DigitalOcean)
 
 The `Dockerfile` builds a lean serving image for the **BGE + Logistic Regression**

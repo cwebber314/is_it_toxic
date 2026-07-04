@@ -61,3 +61,10 @@ def test_is_it_toxic_returns_both_pipelines(client):
 def test_missing_text_is_rejected(client):
     r = client.post("/is-it-toxic", json={})
     assert r.status_code == 422  # pydantic validation error
+
+
+def test_version_reports_git_sha(client, monkeypatch):
+    monkeypatch.setattr(serve, "GIT_SHA", "abc123")
+    r = client.get("/version")
+    assert r.status_code == 200
+    assert r.json() == {"git_sha": "abc123"}

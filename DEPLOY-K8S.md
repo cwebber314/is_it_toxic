@@ -110,6 +110,10 @@ kubectl get svc is-it-toxic -w
 
 ```bash
 IP=$(kubectl get svc is-it-toxic -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+# Confirm the running build matches the commit you deployed:
+curl http://$IP/version         # -> {"git_sha": "<commit>"}
+
 curl -X POST http://$IP/is-it-toxic \
      -H "Content-Type: application/json" \
      -d '{"text": "You are the reason this team is failing."}'

@@ -27,5 +27,11 @@ COPY models_out/logreg.joblib ./models_out/logreg.joblib
 ENV HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1
 
+# The git commit this image was built from, passed by CI (--build-arg GIT_SHA=...)
+# and exposed by the app at /version. Declared late so a new SHA only rebuilds
+# this tiny layer, not the expensive torch/model layers above.
+ARG GIT_SHA=unknown
+ENV GIT_SHA=${GIT_SHA}
+
 EXPOSE 8000
 CMD ["uvicorn", "serve:app", "--host", "0.0.0.0", "--port", "8000"]
