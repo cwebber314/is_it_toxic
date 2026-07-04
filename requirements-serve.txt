@@ -1,0 +1,10 @@
+# Minimal runtime deps for serving the BGE + Logistic Regression pipeline.
+# (torch is installed separately in the Dockerfile as a CPU-only build.)
+#
+# Deliberately excludes lightgbm, chromadb, pandas, jupyterlab and matplotlib —
+# none are needed to load and serve the pre-trained BGE + LogReg model.
+fastapi>=0.110
+uvicorn>=0.29
+sentence-transformers>=2.7
+scikit-learn>=1.4
+joblib>=1.3

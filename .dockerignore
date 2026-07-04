@@ -1,0 +1,43 @@
+# Keep the build context small and the image clean.
+
+# Version control / IDE / OS
+.git/
+.gitignore
+.idea/
+.vscode/
+.DS_Store
+
+# Python caches / envs
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Notebooks and their outputs (not needed to serve)
+*.ipynb
+
+# Training/exploration code and data not used by the serving image
+ingest_transformers.py
+ingest_tfidf.py
+classify_logreg.py
+classify_lightgbm.py
+dataset.py
+*.csv
+requirements.txt
+
+# Regenerable / unused artifacts
+chroma_db/
+tfidf_artifacts/
+models_out/lightgbm.joblib
+
+# Trim the copied BGE model to just what SentenceTransformer needs
+models/bge-small-en-v1.5/onnx/
+models/bge-small-en-v1.5/.cache/
+
+# Docs / misc
+DEPLOY.md
+README.md
