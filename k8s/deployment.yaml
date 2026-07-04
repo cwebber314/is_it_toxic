@@ -11,9 +11,6 @@ spec:
       app: is-it-toxic
   strategy:
     type: Recreate
-    rollingUpdate:
-      maxUnavailable: 0        # keep old pods until new ones are Ready
-      maxSurge: 1
   template:
     metadata:
       labels:
