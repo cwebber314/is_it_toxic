@@ -62,3 +62,33 @@ jobs:
           # Cache layers between runs so the slow PyTorch install is reused.
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Prune old container
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: is-it-toxic
+          package-type: container
+          min-versions-to-keep: 2
+          delete-only-untagged-versions: false
+
+  # Roll the freshly built image out to the DOKS cluster.
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      # doctl fetches the cluster's kubeconfig so kubectl can reach it.
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Configure kubectl for the cluster
+        run: doctl kubernetes cluster kubeconfig save is-it-toxic
+
+      # Point the running Deployment at the exact image we just built. Changing
+      # the pod template to the immutable :<sha> is what triggers the rollout.
+      - name: Roll out the new image
+        run: |
+          kubectl set image deployment/is-it-toxic \
+            api=${{ env.IMAGE }}:${{ github.sha }}
+          kubectl rollout status deployment/is-it-toxic --timeout=180s

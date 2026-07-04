@@ -125,18 +125,22 @@ kubectl get pods -l app=is-it-toxic         # pod health / restarts
 kubectl scale deployment/is-it-toxic --replicas=3
 ```
 
-**Shipping a new model/image.** Because the manifest uses the `:latest` tag with
-`imagePullPolicy: Always`, push a new image then force a rolling restart:
+**Shipping a new model/image.** Just **push to `main`** — CI builds the image,
+tags it with the commit SHA, and the `deploy` job runs
+`kubectl set image deployment/is-it-toxic api=...:<sha>` to roll it out. No manual
+steps.
+
+**Rolling back.** Because each deploy pins an immutable `:<sha>`, you can revert:
 
 ```bash
-docker push ghcr.io/cwebber314/is-it-toxic:latest   # or just push to main and let CI build it
-kubectl rollout restart deployment/is-it-toxic
+kubectl rollout undo deployment/is-it-toxic                 # go back one revision
+kubectl set image deployment/is-it-toxic api=ghcr.io/cwebber314/is-it-toxic:<old-sha>
 kubectl rollout status deployment/is-it-toxic
 ```
 
-> **Better practice:** tag images immutably (e.g. a git SHA) instead of `:latest`,
-> and roll out with `kubectl set image deployment/is-it-toxic api=...:<sha>`. That
-> gives you an exact history and easy `kubectl rollout undo`.
+> Note: the CI prune step keeps only the 2 most recent images, so you can roll
+> back one version via the registry. Bump `min-versions-to-keep` in the workflow
+> if you want a deeper rollback history.
 
 ## Notes / next steps
 

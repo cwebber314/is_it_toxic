@@ -306,5 +306,12 @@ secret to create**. Just:
   *Public*. (Leave it private only if you're prepared to wire up an
   `imagePullSecret` — see DEPLOY-K8S.md.)
 
-The workflow pushes to the registry only. To also roll it out to the DOKS cluster
-automatically, add a step running `kubectl set image` — see DEPLOY-K8S.md.
+After building, a second `deploy` job rolls the new image out to the DOKS cluster
+with `kubectl set image deployment/is-it-toxic api=...:<git-sha>` (a rolling
+update to the exact commit). This needs one repo secret:
+- **`DIGITALOCEAN_ACCESS_TOKEN`** — a DO API token, so `doctl` can fetch the
+  cluster's kubeconfig. ⚠️ This token controls your whole DO account; scope it or
+  use a protected environment if that concerns you.
+
+So a push to `main` now goes all the way to running pods. See DEPLOY-K8S.md for
+the cluster/rollback details.

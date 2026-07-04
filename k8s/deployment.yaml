@@ -21,9 +21,11 @@ spec:
     spec:
       containers:
         - name: api
-          # Pushed by the CI workflow (ghcr.io/<owner>/is-it-toxic).
+          # Default for manual / initial `kubectl apply`. On each deploy the CI
+          # job overrides this to the exact ghcr.io/.../is-it-toxic:<git-sha>
+          # via `kubectl set image`, which is what triggers the rolling update.
           image: ghcr.io/cwebber314/is-it-toxic:latest
-          imagePullPolicy: Always   # re-pull the :latest tag on each rollout
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8000
