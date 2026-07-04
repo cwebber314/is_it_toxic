@@ -68,7 +68,7 @@ jobs:
         with:
           package-name: is-it-toxic
           package-type: container
-          min-versions-to-keep: 2
+          min-versions-to-keep: 4
           delete-only-untagged-versions: false
 
   # Roll the freshly built image out to the DOKS cluster.

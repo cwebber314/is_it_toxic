@@ -10,7 +10,7 @@ spec:
     matchLabels:
       app: is-it-toxic
   strategy:
-    type: RollingUpdate
+    type: Recreate
     rollingUpdate:
       maxUnavailable: 0        # keep old pods until new ones are Ready
       maxSurge: 1
