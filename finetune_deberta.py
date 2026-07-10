@@ -66,6 +66,7 @@ from dataset import EVAL_CSV, LABELS, ROOT, TRAINING_CSV, load_dataset
 
 # --- Configuration knobs (the decisions we made, in one place) ---------------
 MODEL_NAME = "microsoft/deberta-v3-base"   # `base` so it transfers to the real task
+# MODEL_NAME = str(ROOT / "models" / "deberta-v3-base")
 MODEL_OUT = ROOT / "models_out" / "deberta-v3-toxic"   # saved model (gitignored)
 CHECKPOINT_DIR = ROOT / "deberta_checkpoints"          # Trainer scratch (gitignored)
 

@@ -229,6 +229,22 @@ automatically if available.
 > a rigorous score on small data, adapt the k-fold pattern in
 > `classify_logreg_kfold.py`.
 
+To download the model for offline mode:
+```sh
+hf download microsoft/deberta-v3-base --local-dir models/deberta-v3-base
+```
+
+Optionally hard-disable network:
+```sh
+SET HF_HUB_OFFLINE = 1
+```
+
+The tweak finetune_deberta.py:
+```py
+MODEL_NAME = str(ROOT / "models" / "deberta-v3-base")
+```
+
+
 ## Eval
 
 Both classification scripts report accuracy and a per-class precision/recall/F1
