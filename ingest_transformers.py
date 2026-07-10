@@ -6,8 +6,8 @@ classifier can query the collection (e.g. nearest-neighbour vote) to decide
 whether a new comment is toxic.
 
 Usage:
-    python ingest_transformers.py                    # ingest the training set
-    python ingest_transformers.py --dataset eval_dataset.csv
+    python ingest_transformers.py training_dataset.csv
+    python ingest_transformers.py eval_dataset.csv
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from pathlib import Path
 import chromadb
 from chromadb.utils import embedding_functions
 
-from dataset import ROOT, TRAINING_CSV, load_dataset
+from dataset import ROOT, load_dataset
 
 # Use the model already downloaded under models/bge-small-en-v1.5 so ingestion
 # runs fully offline (no Hugging Face Hub download at runtime).
@@ -73,9 +73,9 @@ def ingest(dataset_path: Path, chroma_dir: Path, reset: bool) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--dataset",
+        "dataset",
         type=Path,
-        default=TRAINING_CSV,
+        default=None,
         help="CSV file to ingest (default: training_dataset.csv).",
     )
     parser.add_argument(

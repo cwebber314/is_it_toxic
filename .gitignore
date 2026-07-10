@@ -68,4 +68,7 @@ tfidf_artifacts/
 # which is committed so CI can bake it into the deployment image without training.
 models_out/*
 !models_out/logreg.joblib
+
+# DeBERTa fine-tune scratch (Trainer checkpoints) -- large, regenerated each run.
+deberta_checkpoints/
 _notes.md

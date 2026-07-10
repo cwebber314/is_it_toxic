@@ -22,6 +22,13 @@ There are two separate pipelines this project demonstrates:
 |----------|----------------------|------------|
 | 1 | `BAAI/bge-small-en-v1.5` sentence embeddings → Chroma vector DB | Logistic Regression |
 | 2 | TF-IDF (scikit-learn) | LightGBM |
+| 3 *(learning add-on)* | — (raw text, tokenised) | **Full fine-tune** of `microsoft/deberta-v3-base` |
+
+Pipelines 1 and 2 keep the feature extractor *frozen* and train only a cheap
+classifier on top (a "linear probe"). Pipeline 3 is the end-to-end contrast:
+it trains the whole transformer — encoder weights included — so the
+representation itself adapts to toxicity. It's a learning exercise for scaling to
+a larger real task, not part of the deployed service.
 
 ## Architecture overview
 
@@ -67,6 +74,7 @@ API also runs Pipeline 2 for side-by-side comparison.
 | `ingest_tfidf.py` | Pipeline 2 ingestion — TF-IDF → `tfidf_artifacts/` |
 | `classify_logreg.py` | Pipeline 1 classifier — Logistic Regression |
 | `classify_lightgbm.py` | Pipeline 2 classifier — LightGBM |
+| `finetune_deberta.py` | Pipeline 3 (learning) — full fine-tune of DeBERTa-v3-base |
 | `predict.py` | Loads trained models, shared `predict_bge` / `predict_tfidf` |
 | `serve.py` | FastAPI app exposing `/is-it-toxic` |
 | `test_serve.py` | Fast pytest smoke tests for the API (ML layer mocked) |
@@ -195,6 +203,31 @@ python classify_lightgbm.py
 Loads the TF-IDF feature matrices, trains an `LGBMClassifier`, prints accuracy +
 a classification report on the eval set, and saves the model to
 `models_out/lightgbm.joblib`.
+
+### Pipeline 3 *(learning)* — full fine-tune of DeBERTa-v3-base
+
+Unlike pipelines 1 and 2, this one needs no separate ingestion step — it reads
+the raw CSVs directly and tokenises the text itself. Extra dependencies (the
+DeBERTa-v3 tokenizer is SentencePiece-based):
+
+```bash
+pip install datasets accelerate sentencepiece
+python finetune_deberta.py
+```
+
+The script is broken into labelled steps (load → tokenise → build model →
+train → evaluate → save), each documented inline. It fine-tunes the *entire*
+encoder plus a fresh 2-class head, keeps the best epoch via early stopping, and
+saves the ~440 MB model to `models_out/deberta-v3-toxic/` (gitignored — too big
+to commit). The first run downloads `microsoft/deberta-v3-base` from the Hugging
+Face Hub, and a full fine-tune is **slow on CPU** (minutes); a GPU is used
+automatically if available.
+
+> This is an educational contrast to the frozen-embedding pipelines, not part of
+> the deployed service. On the 100-row toy dataset it may not beat BGE+LogReg's
+> ~0.95 — the value is learning a workflow that scales to a larger real task. For
+> a rigorous score on small data, adapt the k-fold pattern in
+> `classify_logreg_kfold.py`.
 
 ## Eval
 
